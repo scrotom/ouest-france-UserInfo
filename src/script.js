@@ -16,12 +16,12 @@ async function fetchUserData() {
     }
 
     try {
-        // 1. Obtenir le token
+        //obtention du token
         const tokenResponse = await fetch('http://ofr-dev-methjnl-worker.ouest-france.fr:3460/mras_web/rest/auth/login?connectionId=Editorial&username=system&pwd=sysofrpwd&applicationId=Editorial');
         const tokenData = await tokenResponse.json();
         const token = tokenData.token;
 
-        // 2. Utiliser le token pour obtenir les informations de l'utilisateur
+        //obtention des info user
         const userResponse = await fetch(`http://ofr-dev-methjnl-worker.ouest-france.fr:3460/mras_web/rest/v3/user/${username}?connectionId=Editorial&token=${token}&showGroups=true`);
         const userData = await userResponse.json();
 
@@ -38,7 +38,7 @@ async function fetchUserData() {
                 <tr><th>Equipe</th><td>${userInfo.virtualAttributes.va.default_team}</td></tr>
             `;
 
-            // 3. Déconnecter l'utilisateur
+            //deconnexion user
             await fetch(`http://d1methjnlworker01.ouest-france.fr:3460/mras_web/rest/auth/logout?token=${token}`);
         } else {
             resultContainer.style.display = 'block';
