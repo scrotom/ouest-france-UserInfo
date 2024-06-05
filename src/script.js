@@ -5,8 +5,25 @@ document.getElementById('username').addEventListener('keypress', function(event)
     }
 });
 
+//méthode pour vérifier que l'username n'est pas une tentative d'attaque par injection
+function validateUsername(username) {
+    const regex = /^[a-zA-Z0-9_. ]+$/;
+    return regex.test(username);
+}
+
+//méthode pour passer le texte recu en string brut, et éviter ainsi les risque
+function sanitizeHTML(str) {
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
 async function fetchUserData() {
     const username = document.getElementById('username').value;
+    if(!validateUsername(username)) {
+        alert('nom d\'utilisateur invalide.')
+        return;
+    }
     const userInfoDiv = document.getElementById('user-info');
     const groupInfoDiv = document.getElementById('group-info');
     const resultContainer = document.getElementById('result-container');
@@ -60,19 +77,19 @@ async function fetchUserData() {
             
             //afficher le tableau des informations utilisateurs générales
             userInfoDiv.innerHTML = `
-                <div class="table-container">
-                    <table>
-                        <tr><th>Nom</th><td>${userInfo.name}</td></tr>
-                        <tr><th>Description</th><td>${userInfo.description}</td></tr>
-                        <tr><th>Propriétaire</th><td>${userInfo.owner}</td></tr>
-                        <tr><th>Créateur</th><td>${userInfo.creator}</td></tr>
-                        <tr><th>Dernière modification</th><td>${new Date(userInfo.modified * 1000).toLocaleString()}</td></tr>
-                        <tr><th>Dossier de travail</th><td>${userInfo.workFolder}</td></tr>
-                        <tr><th>Email</th><td>${userInfo.systemAttributes.props.principalInfo.email.$}</td></tr>
-                        <tr><th>Signature</th><td>${userInfo.systemAttributes.props.principalInfo.signature}</td></tr>
-                    </table>
-                </div>
-            `;
+            <div class="table-container">
+                <table>
+                    <tr><th>Nom</th><td>${sanitizeHTML(userInfo.name)}</td></tr>
+                    <tr><th>Description</th><td>${sanitizeHTML(userInfo.description)}</td></tr>
+                    <tr><th>Propriétaire</th><td>${sanitizeHTML(userInfo.owner)}</td></tr>
+                    <tr><th>Créateur</th><td>${sanitizeHTML(userInfo.creator)}</td></tr>
+                    <tr><th>Dernière modification</th><td>${sanitizeHTML(new Date(userInfo.modified * 1000).toLocaleString())}</td></tr>
+                    <tr><th>Dossier de travail</th><td>${sanitizeHTML(userInfo.workFolder)}</td></tr>
+                    <tr><th>Email</th><td>${sanitizeHTML(userInfo.systemAttributes.props.principalInfo.email.$)}</td></tr>
+                    <tr><th>Signature</th><td>${sanitizeHTML(userInfo.systemAttributes.props.principalInfo.signature)}</td></tr>
+                </table>
+            </div>
+        `;
 
             //afficher les tableaux des groupes
             userInfo.groups.forEach(group => {
