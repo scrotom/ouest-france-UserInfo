@@ -7,11 +7,11 @@ document.getElementById('username').addEventListener('keypress', function(event)
 
 //méthode pour vérifier que l'username n'est pas une tentative d'attaque par injection
 function validateUsername(username) {
-    const regex = /^[a-zA-Z0-9_. ]+$/;
+    const regex = /^[a-zA-Z0-9_. -]+$/;
     return regex.test(username);
 }
 
-//méthode pour passer le texte recu en string brut, et éviter ainsi les risque
+//méthode pour passer le texte recu en string brut, et éviter ainsi les risque d'attaque XSS (< devient &lt par exemple)
 function sanitizeHTML(str) {
     const temp = document.createElement('div');
     temp.textContent = str;
