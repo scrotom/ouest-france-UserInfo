@@ -13,9 +13,12 @@ async function fetchUserData() {
     const userInfoTitle = document.getElementById('user-info-title');
     const groupInfoTitle = document.getElementById('group-info-title');
 
-    // Hide titles by default
+    //cacher les titres par défaut
     userInfoTitle.style.display = 'none';
     groupInfoTitle.style.display = 'none';
+    //effacer les tableaux avec les informations utilisateurs précédentes
+    userInfoDiv.innerHTML = '';
+    groupInfoDiv.innerHTML = '';
 
     if (!username) {
         alert('Veuillez entrer un nom d\'utilisateur.');
@@ -23,28 +26,39 @@ async function fetchUserData() {
     }
 
     try {
-        // 1. Get the token
+        //recuperation du token
         const tokenResponse = await fetch('http://ofr-dev-methjnl-worker.ouest-france.fr:3460/mras_web/rest/auth/login?connectionId=Editorial&username=system&pwd=sysofrpwd&applicationId=Editorial');
+
+        if (!tokenResponse.ok) {
+            throw new Error('Erreur lors de la récupération du token');
+        }
+
         const tokenData = await tokenResponse.json();
         const token = tokenData.token;
 
-        // 2. Use the token to get user information
+        //recuperer les informations de l'utilisateur grace au token
         const userResponse = await fetch(`http://ofr-dev-methjnl-worker.ouest-france.fr:3460/mras_web/rest/v3/user/${username}?connectionId=Editorial&token=${token}&showGroups=true`);
-        const userData = await userResponse.json();
 
-        // Clear previous user and group information
-        userInfoDiv.innerHTML = '';
-        groupInfoDiv.innerHTML = '';
+        if (!userResponse.ok) {
+            if (userResponse.status === 404) {
+                throw new Error('Utilisateur non trouvé');
+            } else {
+                throw new Error('Erreur lors de la récupération des informations utilisateur');
+            }
+        }
+
+        const userData = await userResponse.json();
 
         if (userData.status === 'success') {
             const userInfo = userData.result;
             resultContainer.style.display = 'block';
             resultContainer.classList.remove('user-not-found');
             
-            // Show titles because user was found
+            //afficher les titres des tableau
             userInfoTitle.style.display = 'block';
             groupInfoTitle.style.display = 'block';
             
+            //afficher le tableau des informations utilisateurs générales
             userInfoDiv.innerHTML = `
                 <div class="table-container">
                     <table>
@@ -60,7 +74,7 @@ async function fetchUserData() {
                 </div>
             `;
 
-            // 3. Display groups
+            //afficher les tableaux des groupes
             userInfo.groups.forEach(group => {
                 groupInfoDiv.innerHTML += `
                     <div class="table-container">
@@ -73,8 +87,11 @@ async function fetchUserData() {
                 `;
             });
 
-            // 4. Logout user
-            await fetch(`http://d1methjnlworker01.ouest-france.fr:3460/mras_web/rest/auth/logout?token=${token}`);
+            //deconnexion de l'api
+            const logoutResponse = await fetch(`http://d1methjnlworker01.ouest-france.fr:3460/mras_web/rest/auth/logout?token=${token}`);
+            if (!logoutResponse.ok) {
+                console.warn('Erreur lors de la déconnexion de l\'API');
+            }
         } else {
             resultContainer.style.display = 'block';
             resultContainer.classList.add('user-not-found');
@@ -84,6 +101,6 @@ async function fetchUserData() {
         console.error('Erreur:', error);
         resultContainer.style.display = 'block';
         resultContainer.classList.add('user-not-found');
-        userInfoDiv.innerHTML = '<div class="error-message">Une erreur s\'est produite. Veuillez réessayer plus tard.</div>';
+        userInfoDiv.innerHTML = `<div class="error-message">${error.message}</div>`;
     }
 }
